@@ -1,3 +1,5 @@
+'use server'
+
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
@@ -33,4 +35,5 @@ const createUser = async (email: string, password: string) => {
       name: email.split("@")[0], // Simple username from email
     },
   });
+  return user;
 };

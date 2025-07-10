@@ -2,16 +2,22 @@ import prisma from '@/lib/prisma';
 import { Todo } from '@prisma/client';
 import { NextResponse, NextRequest } from 'next/server';
 import * as yup from 'yup';
+import { auth } from '@/app/api/auth';
 
 interface Segments {
-  params: {
+  params: Promise<{
     id: string;
-  }
+  }>
 }
 
-const getTodo = async( id: string ):Promise<Todo | null> => {
+const getTodo = async( id: string, userId: string ):Promise<Todo | null> => {
 
-  const todo = await prisma.todo.findFirst({ where: { id } });
+  const todo = await prisma.todo.findFirst({ 
+    where: { 
+      id,
+      userId 
+    } 
+  });
 
   return todo;
 }
@@ -21,11 +27,17 @@ const getTodo = async( id: string ):Promise<Todo | null> => {
 
 export async function GET(request: Request, { params }: Segments ) { 
 
+  const session = await auth();
   
-  const todo = await getTodo(params.id);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const todo = await getTodo(id, session.user.id);
 
   if ( !todo ) {
-    return NextResponse.json({ message: `Todo con id ${ params.id } no exite` }, { status: 404 });
+    return NextResponse.json({ message: `Todo con id ${ id } no exite` }, { status: 404 });
   }
 
 
@@ -41,11 +53,17 @@ const putSchema = yup.object({
 
 export async function PUT(request: Request, { params }: Segments ) { 
 
+  const session = await auth();
   
-  const todo = await getTodo(params.id);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const todo = await getTodo(id, session.user.id);
 
   if ( !todo ) {
-    return NextResponse.json({ message: `Todo con id ${ params.id } no exite` }, { status: 404 });
+    return NextResponse.json({ message: `Todo con id ${ id } no exite` }, { status: 404 });
   }
 
   try {
@@ -53,7 +71,7 @@ export async function PUT(request: Request, { params }: Segments ) {
   
   
     const updatedTodo = await prisma.todo.update({
-      where: { id: params.id },
+      where: { id },
       data: { complete, description }
     })
   

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 
+import { auth } from "@/app/api/auth";
 import TitleSpan from "@/components/TitleSpan";
 import prisma from "@/lib/prisma";
 import { NewTodo, TodosGrid } from "@/todos";
@@ -14,7 +15,14 @@ export const metadata = {
 
 export default async function RestTodosPage() {
 
-  const todos = await prisma.todo.findMany({ orderBy: { description: 'asc' } });
+  const session = await auth();
+
+  const todos = await prisma.todo.findMany({
+    where: {
+      userId: session?.user?.id || ''
+    },
+    orderBy: { description: 'asc' }
+  });
 
 
   return (
@@ -23,7 +31,6 @@ export default async function RestTodosPage() {
       <div className="w-full mx-auto my-6">
         <NewTodo />
       </div>
-
       <TodosGrid todos={todos} />
     </div>
   );

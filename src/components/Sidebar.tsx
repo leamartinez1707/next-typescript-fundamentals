@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CiLogout } from "react-icons/ci";
 import { SidebarItem } from "./SidebarItem";
 import {
   IoBasketOutline,
@@ -12,6 +11,7 @@ import {
 } from "react-icons/io5";
 import { auth } from "@/app/api/auth";
 import LogoutButton from "./sidebar/LogoutButton";
+import { SessionProvider } from "next-auth/react";
 
 const menuItems = [
   {
@@ -67,7 +67,7 @@ export const Sidebar = async () => {
 
         <div className="mt-8 text-center">
           <Image
-            src={user?.user?.image ?? ""}
+            src={user?.user?.image ?? "/images/404-error.png"}
             width={150}
             height={150}
             alt="Profile user photo"
@@ -89,7 +89,9 @@ export const Sidebar = async () => {
       </div>
 
       <div className="px-6 -mx-6 pt-4 flex justify-between items-center border-t">
-        <LogoutButton />
+        <SessionProvider>
+          <LogoutButton />
+        </SessionProvider>
       </div>
     </aside>
   );
